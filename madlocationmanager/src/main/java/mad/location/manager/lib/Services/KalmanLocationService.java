@@ -256,19 +256,33 @@ public class KalmanLocationService extends Service
             this.owner = owner;
         }
 
-        private void handlePredict(SensorGpsDataItem sdi) {
-            log2File("%d%d KalmanPredict : accX=%f, accY=%f",
+        private Location handlePredict(SensorGpsDataItem sdi) {
+            m_kalmanFilter.predict(sdi.getTimestamp(), sdi.getAbsEastAcc(), sdi.getAbsNorthAcc());
+            Location loc = new Location(TAG);
+            double xVel,yVel;
+            GeoPoint pp = Coordinates.metersToGeoPoint(m_kalmanFilter.getCurrentX(),
+                    m_kalmanFilter.getCurrentY());
+            loc.setLatitude(pp.Latitude);
+            loc.setLongitude(pp.Longitude);
+            loc.setAltitude(sdi.getGpsAlt());
+            xVel = m_kalmanFilter.getCurrentXVel();
+            yVel = m_kalmanFilter.getCurrentYVel();
+            double speed = Math.sqrt(xVel*xVel + yVel*yVel); //scalar speed without bearing
+            loc.setSpeed((float) speed);
+            //double Bearing = Math.atan2(yVel,xVel);
+            log2File("%d%d KalmanPredict : accX=%f, accY=%f, speed=%f",
                     Utils.LogMessageType.KALMAN_PREDICT.ordinal(),
                     (long) sdi.getTimestamp(),
                     sdi.getAbsEastAcc(),
-                    sdi.getAbsNorthAcc());
-            m_kalmanFilter.predict(sdi.getTimestamp(), sdi.getAbsEastAcc(), sdi.getAbsNorthAcc());
+                    sdi.getAbsNorthAcc(),speed*3.6);
+
+            return loc;
         }
 
         private void handleUpdate(SensorGpsDataItem sdi) {
             double xVel = sdi.getSpeed() * Math.cos(sdi.getCourse());
             double yVel = sdi.getSpeed() * Math.sin(sdi.getCourse());
-            log2File("%d%d KalmanUpdate : pos lon=%f, lat=%f, xVel=%f, yVel=%f, posErr=%f, velErr=%f",
+            log2File("%d%d KalmanUpdateEntry : pos lon=%f, lat=%f, xVel=%f, yVel=%f, posErr=%f, velErr=%f, speed=%f",
                     Utils.LogMessageType.KALMAN_UPDATE.ordinal(),
                     (long) sdi.getTimestamp(),
                     sdi.getGpsLon(),
@@ -276,7 +290,8 @@ public class KalmanLocationService extends Service
                     xVel,
                     yVel,
                     sdi.getPosErr(),
-                    sdi.getVelErr()
+                    sdi.getVelErr(),
+                    sdi.getSpeed()*3.6
             );
 
             m_kalmanFilter.update(
@@ -306,7 +321,7 @@ public class KalmanLocationService extends Service
             loc.setTime(System.currentTimeMillis());
             loc.setElapsedRealtimeNanos(System.nanoTime());
             loc.setAccuracy((float) sdi.getPosErr());
-
+            log2File("LocationAfterUpdateStep: speed =%f ",loc.getSpeed()*3.6);
             if (m_geoHashRTFilter != null) {
                 m_geoHashRTFilter.filter(loc);
             }
@@ -335,10 +350,12 @@ public class KalmanLocationService extends Service
 
                     //warning!!!
                     if (sdi.getGpsLat() == SensorGpsDataItem.NOT_INITIALIZED) {
-                        handlePredict(sdi);
+                        Location loc = handlePredict(sdi);
+                        publishProgress(loc);
                     } else {
                         handleUpdate(sdi);
                         Location loc = locationAfterUpdateStep(sdi);
+                        //ObjectFieldPrinter.printFields(person);
                         publishProgress(loc);
                     }
                 }

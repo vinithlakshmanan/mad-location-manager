@@ -67,6 +67,9 @@ public class GeohashRTFilter {
         return m_distanceAsIsHP;
     }
 
+    public double getSpeed(){return speed;}
+    private double speed;
+
     private ILogger m_logger;
 
     public void reset(ILogger logger) {
@@ -86,6 +89,12 @@ public class GeohashRTFilter {
     private float hpResBuffAsIs[] = new float[3];
     private float hpResBuffGeo[] = new float[3];
 
+    private Location loc;
+
+    public Location getLoc() {
+        return loc;
+    }
+
     public void filter(Location loc) {
         if (m_logger != null) {
             String toLog = String.format("%d%d FKS : lat=%f, lon=%f, alt=%f",
@@ -94,6 +103,9 @@ public class GeohashRTFilter {
                     loc.getLatitude(), loc.getLongitude(), loc.getAltitude());
             m_logger.log2file(toLog);
         }
+
+        this.loc = loc;
+        speed = this.loc.getSpeed();
 
         GeoPoint pi = new GeoPoint(loc.getLatitude(), loc.getLongitude());
         if (isFirstCoordinate) {
@@ -173,6 +185,7 @@ public class GeohashRTFilter {
         currentGeoPoint.Longitude += pi.Longitude;
         ++pointsInCurrentGeohashCount;
     }
+
 
     public void stop() {
         if (pointsInCurrentGeohashCount >= m_geohashMinPointCount) {

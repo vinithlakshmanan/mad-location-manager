@@ -11,7 +11,7 @@ android {
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
 
         buildConfigField "String", "lightMapStyle", "\"https://maps.swift.kg/styles/basic.json\""
-        buildConfigField "String", "access_token", "\"pk.eyJ1IjoicGVuZG9sZiIsImEiOiJjaWVnNTN4Zm4wMDAxc3FtODA3bWo4OXVnIn0.6hwSXZEBAA7Kv7uiKk5LWQ\""
+        buildConfigField "String", "access_token", "\"pk.eyJ1IjoidmluaXRobGFrc2htYW5hbiIsImEiOiJjbGp5ZG4wNXUwNDNoM2NwaDNkb2c4Z2ZnIn0.etwktPrD3q0Y7WGHZBRMSA\""
     }
     buildTypes {
         release {

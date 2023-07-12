@@ -67,9 +67,11 @@ import java.util.TimeZone;
 public class MainActivity extends AppCompatActivity implements LocationServiceInterface, MapInterface, ILogger {
 
     private SharedPreferences mSharedPref;
+    private Location currentLocation;
 
     private String xLogFolderPath;
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+
     class ChangableFileNameGenerator implements FileNameGenerator {
         private String fileName;
         public void setFileName(String fileName) {
@@ -132,21 +134,42 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
 
         @Override
         protected void onProgressUpdate(Object... values) {
+            super.onProgressUpdate(values);
             TextView tvStatus = (TextView) findViewById(R.id.tvStatus);
             TextView tvDistance = (TextView) findViewById(R.id.tvDistance);
-            if (m_isLogging) {
-                if (m_geoHashRTFilter == null)
-                    return;
+            float speed;
+            double lat;
+            double lon;
+            if (currentLocation != null && currentLocation.hasSpeed()) {
+                speed = currentLocation.getSpeed();
+                lat = currentLocation.getLatitude();
+                lon = currentLocation.getLongitude();
+            } else {
+                speed = 0f;
+                lat = 0;
+                lon = 0;
+            }
 
-                tvDistance.setText(String.format(
+            //if (values.length > 0 && values[0] instanceof Location) {
+              //  Location location = (Location) values[0];
+                // Access the location object and perform actions
+                //float speed = location.getSpeed();
+                if (m_isLogging) {
+                    if (m_geoHashRTFilter == null)
+                        return;
+
+                   tvDistance.setText(String.format(Locale.ENGLISH, "Speed %.2f km/h\n" + "Latitude %f deg\n" + "Longitude %f deg \n", speed*3.6,lat,lon));
+                //}
+                /*tvDistance.setText(String.format(
                         "Distance (geo): %fm\n" +
                                 "Distance (geo) HP: %fm\n" +
                                 "Distance as is : %fm\n" +
                                 "Distance as is HP: %fm",
-                        m_geoHashRTFilter.getDistanceGeoFiltered(),
+                        m_geoHashRTFilter.getSpeed(),
+                        //m_geoHashRTFilter.getDistanceGeoFiltered(),
                         m_geoHashRTFilter.getDistanceGeoFilteredHP(),
                         m_geoHashRTFilter.getDistanceAsIs(),
-                        m_geoHashRTFilter.getDistanceAsIsHP()));
+                        m_geoHashRTFilter.getDistanceAsIsHP()));*/
             } else {
                 if (!m_sensorCalibrator.isInProgress())
                     return;
@@ -170,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
     private SensorCalibrator m_sensorCalibrator = null;
     private boolean m_isLogging = false;
     private boolean m_isCalibrating = false;
-    private RefreshTask m_refreshTask = new RefreshTask(1000l, this);
+    private RefreshTask m_refreshTask = new RefreshTask(100l, this);
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -211,9 +234,9 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
                 Settings settings =
                         new Settings(
                                 Utils.ACCELEROMETER_DEFAULT_DEVIATION,
-                                Integer.parseInt(mSharedPref.getString("pref_gps_min_distance", "10")),
-                                Integer.parseInt(mSharedPref.getString("pref_gps_min_time", "2000")),
-                                Integer.parseInt(mSharedPref.getString("pref_position_min_time", "500")),
+                                Integer.parseInt(mSharedPref.getString("pref_gps_min_distance", "0")),
+                                Integer.parseInt(mSharedPref.getString("pref_gps_min_time", "0")),
+                                Integer.parseInt(mSharedPref.getString("pref_position_min_time", "0")),
                                 Integer.parseInt(mSharedPref.getString("pref_geohash_precision", "6")),
                                 Integer.parseInt(mSharedPref.getString("pref_geohash_min_point", "2")),
                                 Double.parseDouble(mSharedPref.getString("pref_sensor_frequency", "10")),
@@ -341,14 +364,15 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
 
     @Override
     public void locationChanged(Location location) {
-        if (m_map != null && m_presenter != null) {
+        currentLocation = location;
+        /*if (m_map != null && m_presenter != null) {
             if (!m_map.isMyLocationEnabled()) {
                 m_map.setMyLocationEnabled(true);
                 m_map.getMyLocationViewSettings().setForegroundTintColor(ContextCompat.getColor(this, R.color.red));
             }
 
             m_presenter.locationChanged(location, m_map.getCameraPosition());
-        }
+        }*/
     }
 
     public static final int FILTER_KALMAN_ONLY = 0;
@@ -446,7 +470,7 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        ServicesHelper.addLocationServiceInterface(this);
         defaultUEH = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(_unCaughtExceptionHandler);
         Mapbox.getInstance(this, BuildConfig.access_token);
@@ -527,7 +551,7 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
         if (m_mapView != null) {
             m_mapView.onResume();
         }
-        m_refreshTask = new RefreshTask(1000, this);
+        m_refreshTask = new RefreshTask(100, this);
         m_refreshTask.needTerminate = false;
         m_refreshTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
