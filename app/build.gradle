@@ -43,5 +43,5 @@ dependencies {
     api group: 'com.elvishew', name: 'xlog', version:'1.4.0'
     api project(path: ':madlocationmanager')
 
-   // implementation 'org.java-websocket:Java-WebSocket:1.4.0'
+    implementation 'org.java-websocket:Java-WebSocket:1.4.0'
 }

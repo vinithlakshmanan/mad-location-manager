@@ -28,7 +28,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
-//import android.widget.EditText;
+import android.widget.EditText;
 
 import com.elvishew.xlog.LogLevel;
 import com.elvishew.xlog.XLog;
@@ -42,7 +42,6 @@ import mad.location.manager.lib.Interfaces.ILogger;
 import mad.location.manager.lib.Interfaces.LocationServiceInterface;
 import mad.location.manager.lib.Loggers.GeohashRTFilter;
 import mad.location.manager.lib.SensorAux.SensorCalibrator;
-import mad.location.manager.lib.Services.KalmanLocationService;
 import mad.location.manager.lib.Services.ServicesHelper;
 import mad.location.manager.lib.Services.Settings;
 
@@ -64,8 +63,6 @@ import com.mapbox.mapboxsdk.maps.MapboxMap;
 //import org.json.JSONObject;
 
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
 
     private String xLogFolderPath;
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+    private WebSocketClientHelper webSocket= new WebSocketClientHelper();
 
     class ChangableFileNameGenerator implements FileNameGenerator {
         private String fileName;
@@ -146,17 +144,18 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
             super.onProgressUpdate(values);
             TextView tvStatus = (TextView) findViewById(R.id.tvStatus);
             TextView tvDistance = (TextView) findViewById(R.id.tvDistance);
-            float speed;
-            double lat;
-            double lon;
+            float speed = 0f;
+            double lat = 0;
+            double lon = 0;
+            float accuracy = 0f;
+            long timestamp = 0;
             if (currentLocation != null && currentLocation.hasSpeed()) {
                 speed = currentLocation.getSpeed();
                 lat = currentLocation.getLatitude();
                 lon = currentLocation.getLongitude();
-            } else {
-                speed = 0f;
-                lat = 0;
-                lon = 0;
+                accuracy = currentLocation.getAccuracy();
+                timestamp = currentLocation.getTime();
+//                timestamp = System.currentTimeMillis();
             }
 
             //if (values.length > 0 && values[0] instanceof Location) {
@@ -168,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
                         return;
 
                    tvDistance.setText(String.format(Locale.ENGLISH, "Speed %.2f km/h\n" + "Latitude %f deg\n" + "Longitude %f deg \n", speed*3.6,lat,lon));
+                   webSocket.send(lat, lon, speed, accuracy, timestamp);
                 //}
                 /*tvDistance.setText(String.format(
                         "Distance (geo): %fm\n" +
@@ -207,6 +207,18 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    private void openclose_websocket(boolean openWebsocket) {
+        // if the user wants to open the websocket
+        if (openWebsocket) {
+            EditText et = (EditText) findViewById(R.id.etWebsocketUrl);
+            webSocket.open(et.getText().toString());
+        }
+        // the user wants to close the websocket
+        else {
+            webSocket.close();
+        }
     }
 
     private void set_isLogging(boolean isLogging) {
@@ -307,6 +319,7 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
     }
 
     public void btnStartStop_click(View v) {
+        openclose_websocket(!m_isLogging);
         set_isLogging(!m_isLogging);
     }
     public void btnCalibrate_click(View v) {

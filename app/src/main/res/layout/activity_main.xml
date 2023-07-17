@@ -82,10 +82,24 @@
         android:onClick="btnCalibrate_click"
         android:text="@string/calibrate"
         android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/location_provider_title"
+        app:layout_constraintBottom_toTopOf="@+id/etWebsocketUrl"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cbFilteredKalman" />
+
+    <EditText
+        android:id="@+id/etWebsocketUrl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+        android:inputType="textUri"
+        android:text="ws://192.168.0.1:9090"
+        app:layout_constraintBottom_toTopOf="@+id/location_provider_title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnCalibrate" />
 
     <TextView
         android:id="@+id/tvDistance"
