@@ -17,6 +17,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -569,7 +570,7 @@ public class KalmanLocationService extends Service
         if (loc == null) return;
         if (m_settings.filterMockGpsCoordinates && loc.isFromMockProvider()) return;
 
-        double x, y, xVel, yVel, posDev, course, speed;
+        double x, y, xVel, yVel, posDev, course, speed, velErr = 0;
         long timeStamp;
         speed = loc.getSpeed();
         course = loc.getBearing();
@@ -581,7 +582,14 @@ public class KalmanLocationService extends Service
         timeStamp = Utils.nano2milli(loc.getElapsedRealtimeNanos());
         //WARNING!!! here should be speed accuracy, but loc.hasSpeedAccuracy()
         // and loc.getSpeedAccuracyMetersPerSecond() requares API 26
-        double velErr = loc.getAccuracy() * 0.1;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if(loc.hasSpeedAccuracy()){
+                 velErr = loc.getSpeedAccuracyMetersPerSecond();
+            }else{
+                 velErr = loc.getAccuracy() * 0.1;
+            }
+        }
+
 
         String logStr = String.format(Locale.ENGLISH, "%d%d GPS : pos lat=%f, lon=%f, alt=%f, hdop=%f, speed=%f, bearing=%f, sa=%f",
                 Utils.LogMessageType.GPS_DATA.ordinal(),

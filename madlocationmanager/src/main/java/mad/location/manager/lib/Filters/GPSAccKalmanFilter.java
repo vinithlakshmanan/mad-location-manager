@@ -109,8 +109,8 @@ public class GPSAccKalmanFilter {
         double Q[] = {
                 posSig, 0.0, covDev, 0.0,
                 0.0, posSig, 0.0, covDev,
-                covDev, 0.0, velSig, 0.0,
-                0.0, covDev, 0.0, velSig
+                0.0, 0.0, velSig, 0.0,
+                0.0, 0.0, 0.0, velSig
         };
         m_kf.Q.setData(Q);
     }

@@ -28,6 +28,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
+//import android.widget.EditText;
 
 import com.elvishew.xlog.LogLevel;
 import com.elvishew.xlog.XLog;
@@ -57,7 +58,14 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 
+//import org.java_websocket.client.WebSocketClient;
+//import org.java_websocket.handshake.ServerHandshake;
+//import org.json.JSONException;
+//import org.json.JSONObject;
+
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +74,7 @@ import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity implements LocationServiceInterface, MapInterface, ILogger {
 
+//    private WebSocketClient mWebSocketClient;
     private SharedPreferences mSharedPref;
     private Location currentLocation;
 
@@ -612,5 +621,54 @@ public class MainActivity extends AppCompatActivity implements LocationServiceIn
 
         return super.onOptionsItemSelected(item);
     }
+
+
+   /* private void connectWebSocket(String websocketUrl) {
+        final String TAG = "WebSocket";
+        URI uri;
+        try {
+            uri = new URI(websocketUrl);
+        } catch (URISyntaxException e) {
+            Log.e(TAG, "URI Syntax Exception");
+            return;
+        }
+
+        mWebSocketClient = new WebSocketClient(uri) {
+            @Override
+            public void onOpen(ServerHandshake serverHandshake) {
+                runOnUiThread(() ->
+                        Toast.makeText(MainActivity.this, "Websocket Opened", Toast.LENGTH_SHORT).show()
+                );
+                Log.i(TAG, "Opened");
+            }
+
+            @Override
+            public void onMessage(String s) {
+                Log.i(TAG, "RECV " + s);
+            }
+
+            @Override
+            public void onClose(int i, String s, boolean b) {
+                runOnUiThread(() ->
+                        Toast.makeText(MainActivity.this, "Websocket Closed", Toast.LENGTH_SHORT).show()
+                );
+                Log.i(TAG, "Closed " + s);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                runOnUiThread(() ->
+                        Toast.makeText(MainActivity.this, "Websocket Error", Toast.LENGTH_SHORT).show()
+                );
+                Log.i(TAG, "Error " + e.getMessage());
+            }
+        };
+        mWebSocketClient.connect();
+    }
+
+    private void disconnectWebSocket() {
+        if (mWebSocketClient != null)
+            mWebSocketClient.close();
+    }*/
 
 }
