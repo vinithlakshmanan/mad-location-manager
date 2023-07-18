@@ -31,7 +31,7 @@ public class GPSAccKalmanFilter {
         m_useGpsSpeed = useGpsSpeed;
 
         m_kf = new KalmanFilter(4, mesDim, 2);
-        m_timeStampMsPredict = m_timeStampMsUpdate = timeStampMs;
+        m_timeStampMsUpdate = timeStampMs;
         m_accSigma = accDev;
         m_predictCount = 0;
         m_kf.Xk_k.setData(x, y, xVel, yVel);
@@ -42,7 +42,9 @@ public class GPSAccKalmanFilter {
         mVelFactor = velFactor;
         mPosFactor = posFactor;
     }
-
+    public void setM_timeStampMsPredict(double m_timeStampMsPredict){
+        this.m_timeStampMsPredict = m_timeStampMsPredict;
+    }
     private void rebuildF(double dtPredict) {
         double f[] = {
                 1.0, 0.0, dtPredict, 0.0,
@@ -82,10 +84,10 @@ public class GPSAccKalmanFilter {
                 "}");
         if (m_useGpsSpeed) {
             double R[] = {
-                    posSigma, 0.0, 0.0, 0.0,
-                    0.0, posSigma, 0.0, 0.0,
-                    0.0, 0.0, velSigma, 0.0,
-                    0.0, 0.0, 0.0, velSigma
+                    posSigma*posSigma, 0.0, 0.0, 0.0,
+                    0.0, posSigma*posSigma, 0.0, 0.0,
+                    0.0, 0.0, velSigma*velSigma, 0.0,
+                    0.0, 0.0, 0.0, velSigma*velSigma
             };
             m_kf.R.setData(R);
         } else {
@@ -94,13 +96,15 @@ public class GPSAccKalmanFilter {
         }
     }
 
-    private void rebuildQ(double dtUpdate,
+    private void rebuildQ(double dtPredict,
                           double accDev) {
 //        now we use predictCount. but maybe there is way to use dtUpdate.
 //        m_kf.Q.setIdentity();
 //        m_kf.Q.scale(accSigma * dtUpdate);
-        double velDev = accDev * m_predictCount;
-        double posDev = velDev * m_predictCount / 2;
+        //double velDev = accDev * m_predictCount;
+        //double posDev = velDev * m_predictCount / 2;
+        double velDev = accDev * dtPredict;
+        double posDev = velDev * dtPredict / 2;
         double covDev = velDev * posDev;
 
         double posSig = posDev * posDev;
@@ -125,7 +129,7 @@ public class GPSAccKalmanFilter {
         rebuildU(xAcc, yAcc);
 
         ++m_predictCount;
-        rebuildQ(dtUpdate, m_accSigma);
+        rebuildQ(dtPredict, m_accSigma);
 
         m_timeStampMsPredict = timeNowMs;
         m_kf.predict();

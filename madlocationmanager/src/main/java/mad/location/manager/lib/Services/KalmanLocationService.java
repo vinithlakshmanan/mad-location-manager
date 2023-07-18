@@ -525,6 +525,9 @@ public class KalmanLocationService extends Service
 
         long now = android.os.SystemClock.elapsedRealtimeNanos();
         long nowMs = Utils.nano2milli(now);
+        /*if(m_kalmanFilter != null) {
+            m_kalmanFilter.setM_timeStampMsPredict(nowMs);
+        }*/
         switch (event.sensor.getType()) {
             case Sensor.TYPE_LINEAR_ACCELERATION:
                 System.arraycopy(event.values, 0, linearAcceleration, 0, event.values.length);
